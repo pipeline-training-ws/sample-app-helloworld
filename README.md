@@ -20,6 +20,7 @@ when adopting the **Pipeline-as-Code** pattern with a centralised Shared Library
 
 ```
 sample-app-helloWorld/
+├── Jenkinsfile      # Imports ci-shared-library and invokes pipelineTemplateHelloWorld
 ├── ci-config.yaml   # Application-level CI configuration consumed by the pipeline template
 └── README.md        # This file
 ```
@@ -43,15 +44,30 @@ inside Groovy shared library steps via `config.ci.<key>`.
 
 ## How It Is Used
 
-The Jenkinsfile in the CI template folder loads this config at runtime:
+The `Jenkinsfile` in this repository dynamically imports `ci-shared-library`, loads `ci-config.yaml`,
+and invokes the `pipelineTemplateHelloWorld` step:
 
 ```groovy
-Map configMap = readYaml 'ci-config.yaml'
-pipelineMaven(configMap)
+library identifier: "${env.SHAREDLIB_GIT_REPO}@${env.SHAREDLIB_GIT_TAG_}", retriever: modernSCM(
+        [$class: 'GitSCMSource',
+         remote: "${env.SHAREDLIB_GIT_SERVER}/${env.SHAREDLIB_GIT_ORG}/${env.SHAREDLIB_GIT_REPO}.git",
+         credentialsId: "${env.SHAREDLIB_GIT_CREDENTIALS}"
+        ]
+)
+
+Map configMap = readYaml file: 'ci-config.yaml'
+pipelineTemplateHelloWorld(configMap)
 ```
 
-The `env.SHAREDLIB_GIT_TAG` (and related vars) should be injected at **Folder** or **Controller** level
-so the correct version of the shared library is loaded without modifying the Jenkinsfile.
+The `env.SHAREDLIB_GIT_SERVER`, `env.SHAREDLIB_GIT_ORG`, `env.SHAREDLIB_GIT_REPO`, `env.SHAREDLIB_GIT_TAG`,
+and `env.SHAREDLIB_GIT_CREDENTIALS` vars each default to a sensible value in the `Jenkinsfile` but can be
+overridden at **Folder** or **Controller** level so the correct version/location of the shared library is
+loaded without modifying the `Jenkinsfile`.
+
+> **Note:** `pipelineTemplateHelloWorld` currently reads `config.hello`, `config.firstName`, and
+> `config.lastName` directly off the map passed to it, while `ci-config.yaml` nests these values under
+> a `ci:` key. This mismatch also exists in the `1-helloWorldSharedLib` reference template and means
+> those values resolve to `null` at runtime until the library step or the config structure is aligned.
 
 ---
 
