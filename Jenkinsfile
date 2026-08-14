@@ -27,5 +27,4 @@ library identifier: "${env.SHAREDLIB_GIT_REPO}@${env.SHAREDLIB_GIT_TAG_}", retri
         ]
 )
 
-Map configMap = readYaml file: 'ci-config.yaml'
-pipelineTemplateHelloWorld(configMap)
+pipelineTemplateHelloWorld('ci-config.yaml')
