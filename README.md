@@ -107,7 +107,7 @@ keys nested under `ci:` in `ci-config.yaml`.
 
 ## Related Resources
 
-- [`shared-library/vars/pipelineTemplateHelloWorld.groovy`](../shared-library/vars/pipelineTemplateHelloWorld.groovy)
-- [`template-catalog/templates/0-helloWorld/Jenkinsfile`](../template-catalog/templates/0-helloWorld/Jenkinsfile)
-- [`template-catalog/templates/1-helloWorld-MB/Jenkinsfile`](../template-catalog/templates/1-helloWorld-MB/Jenkinsfile)
+- [`shared-library/vars/pipelineTemplateHelloWorld.groovy`](https://github.com/pipeline-training-ws/shared-library/blob/main/vars/pipelineTemplateHelloWorld.groovy)
+- [`template-catalog/templates/0-helloWorld/Jenkinsfile`](https://github.com/pipeline-training-ws/template-catalog/blob/main/templates/0-helloWorld/Jenkinsfile)
+- [`template-catalog/templates/1-helloWorld-MB/Jenkinsfile`](https://github.com/pipeline-training-ws/template-catalog/blob/main/templates/1-helloWorld-MB/Jenkinsfile)
 - [CloudBees CI Shared Libraries documentation](https://docs.cloudbees.com/docs/cloudbees-ci/latest/pipelines/shared-libraries)
