@@ -11,8 +11,8 @@ when adopting the **Pipeline-as-Code** pattern with a centralised Shared Library
 | Goal | Detail |
 |------|--------|
 | Demonstrate `ci-config.yaml` | Shows how per-application CI configuration is declared and consumed by the shared pipeline template |
-| Shared Library integration | Works with `pipelineTemplateHelloWorld` from `ci-shared-library` |
-| Lab exercises | Used in the *Hello World* lab series (templates `0-helloWorld` and `1-helloWorldSharedLib`) |
+| Shared Library integration | Works with `pipelineTemplateHelloWorld` from `shared-library` |
+| Lab exercises | Used in the *Hello World* lab series (templates `0-helloWorld` and `1-helloWorld-MB`) |
 
 ---
 
@@ -20,9 +20,10 @@ when adopting the **Pipeline-as-Code** pattern with a centralised Shared Library
 
 ```
 sample-app-helloWorld/
-├── Jenkinsfile      # Imports ci-shared-library and invokes pipelineTemplateHelloWorld
-├── ci-config.yaml   # Application-level CI configuration consumed by the pipeline template
-└── README.md        # This file
+├── Jenkinsfile           # Imports shared-library and invokes pipelineTemplateHelloWorld
+├── ci-config.yaml        # Application-level CI configuration consumed by the pipeline template
+├── Pipeline-design.jpeg  # Diagram of the Pipeline-as-Code / Shared Library flow
+└── README.md             # This file
 ```
 
 ---
@@ -44,8 +45,9 @@ inside Groovy shared library steps via `config.ci.<key>`.
 
 ## How It Is Used
 
-The `Jenkinsfile` in this repository dynamically imports `ci-shared-library`, loads `ci-config.yaml`,
-and invokes the `pipelineTemplateHelloWorld` step:
+The `Jenkinsfile` in this repository dynamically imports `shared-library` and invokes the
+`pipelineTemplateHelloWorld` step, passing it the *path* to `ci-config.yaml` (not a pre-parsed map —
+the shared library step reads and parses the YAML itself):
 
 ```groovy
 library identifier: "${env.SHAREDLIB_GIT_REPO}@${env.SHAREDLIB_GIT_TAG_}", retriever: modernSCM(
@@ -55,8 +57,7 @@ library identifier: "${env.SHAREDLIB_GIT_REPO}@${env.SHAREDLIB_GIT_TAG_}", retri
         ]
 )
 
-Map configMap = readYaml file: 'ci-config.yaml'
-pipelineTemplateHelloWorld(configMap)
+pipelineTemplateHelloWorld('ci-config.yaml')
 ```
 
 The `env.SHAREDLIB_GIT_SERVER`, `env.SHAREDLIB_GIT_ORG`, `env.SHAREDLIB_GIT_REPO`, `env.SHAREDLIB_GIT_TAG`,
@@ -64,16 +65,15 @@ and `env.SHAREDLIB_GIT_CREDENTIALS` vars each default to a sensible value in the
 overridden at **Folder** or **Controller** level so the correct version/location of the shared library is
 loaded without modifying the `Jenkinsfile`.
 
-> **Note:** `pipelineTemplateHelloWorld` currently reads `config.hello`, `config.firstName`, and
-> `config.lastName` directly off the map passed to it, while `ci-config.yaml` nests these values under
-> a `ci:` key. This mismatch also exists in the `1-helloWorldSharedLib` reference template and means
-> those values resolve to `null` at runtime until the library step or the config structure is aligned.
+Inside `pipelineTemplateHelloWorld`, a dedicated "Load Config" stage runs `readYaml(file: configFile).ci`,
+so the values it prints (`config.hello`, `config.firstName`, `config.lastName`) correctly resolve to the
+keys nested under `ci:` in `ci-config.yaml`.
 
 ---
 
 ## Related Resources
 
-- [`ci-shared-library/vars/pipelineTemplateHelloWorld.groovy`](../ci-shared-library/vars/pipelineTemplateHelloWorld.groovy)
-- [`ci-templates/templates/0-helloWorld/Jenkinsfile`](../ci-templates/templates/0-helloWorld/Jenkinsfile)
-- [`ci-templates/templates/1-helloWorldSharedLib/Jenkinsfile`](../ci-templates/templates/1-helloWorldSharedLib/Jenkinsfile)
+- [`shared-library/vars/pipelineTemplateHelloWorld.groovy`](../shared-library/vars/pipelineTemplateHelloWorld.groovy)
+- [`template-catalog/templates/0-helloWorld/Jenkinsfile`](../template-catalog/templates/0-helloWorld/Jenkinsfile)
+- [`template-catalog/templates/1-helloWorld-MB/Jenkinsfile`](../template-catalog/templates/1-helloWorld-MB/Jenkinsfile)
 - [CloudBees CI Shared Libraries documentation](https://docs.cloudbees.com/docs/cloudbees-ci/latest/pipelines/shared-libraries)
