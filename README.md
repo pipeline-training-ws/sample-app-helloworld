@@ -22,8 +22,42 @@ when adopting the **Pipeline-as-Code** pattern with a centralised Shared Library
 sample-app-helloWorld/
 ├── Jenkinsfile           # Imports shared-library and invokes pipelineTemplateHelloWorld
 ├── ci-config.yaml        # Application-level CI configuration consumed by the pipeline template
-├── Pipeline-design.jpeg  # Diagram of the Pipeline-as-Code / Shared Library flow
 └── README.md             # This file
+```
+
+---
+
+## Pipeline Design
+
+```mermaid
+flowchart LR
+    subgraph Repo1["1. Application Repo (Source Code)"]
+        Source["Source Code"]
+        JF["Jenkinsfile<br/>(calls myDeliveryPipeline)"]
+    end
+
+    subgraph Repo2["2. Shared Library Repo (Pipeline Templates)"]
+        Vars["vars/ Directory"]
+        MDP["myDeliveryPipeline.groovy"]
+        DeployGroovy["deploy.groovy"]
+        Vars --> MDP
+        Vars --> DeployGroovy
+    end
+
+    subgraph Server["3. Jenkins Server"]
+        Loader["Pipeline Loader<br/>(loads Shared Library from Repo 2)"]
+        subgraph Engine["Execution Engine<br/>(parses Jenkinsfile, executes steps)"]
+            Build["BUILD"] --> Test["TEST"] --> Deploy["DEPLOY"]
+        end
+        Loader --> Engine
+    end
+
+    JenkinsfileDef["4. Jenkinsfile<br/>library 'my-shared-library'<br/>myDeliveryPipeline { appName = 'web-app'; env = 'production' }"]
+
+    JF -- "Loads Jenkinsfile" --> Engine
+    JenkinsfileDef -- "Defines Pipeline" --> Engine
+    Repo2 -- "Imports Shared Library" --> Loader
+    Repo2 -- "Loads Groovy Templates" --> Engine
 ```
 
 ---
