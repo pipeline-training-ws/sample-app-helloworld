@@ -31,33 +31,32 @@ sample-app-helloWorld/
 
 ```mermaid
 flowchart LR
-    subgraph Repo1["1. Application Repo (Source Code)"]
-        Source["Source Code"]
-        JF["Jenkinsfile<br/>(calls myDeliveryPipeline)"]
+    subgraph Repo1["1. Application Repo (sample-app-helloWorld)"]
+        Source["ci-config.yaml<br/>(ci.hello, ci.firstName, ci.lastName)"]
+        JF["Jenkinsfile<br/>(calls pipelineTemplateHelloWorld)"]
     end
 
-    subgraph Repo2["2. Shared Library Repo (Pipeline Templates)"]
+    subgraph Repo2["2. Shared Library Repo (shared-library)"]
         Vars["vars/ Directory"]
-        MDP["myDeliveryPipeline.groovy"]
-        DeployGroovy["deploy.groovy"]
-        Vars --> MDP
-        Vars --> DeployGroovy
+        PTH["pipelineTemplateHelloWorld.groovy"]
+        Vars --> PTH
     end
 
-    subgraph Server["3. Jenkins Server"]
-        Loader["Pipeline Loader<br/>(loads Shared Library from Repo 2)"]
-        subgraph Engine["Execution Engine<br/>(parses Jenkinsfile, executes steps)"]
-            Build["BUILD"] --> Test["TEST"] --> Deploy["DEPLOY"]
+    subgraph Server["3. Jenkins / CloudBees CI Server"]
+        Loader["Pipeline Loader<br/>(resolves library step from Repo 2)"]
+        subgraph Engine["Stage 'CI' (Kubernetes agent)<br/>pipelineTemplateHelloWorld execution"]
+            LoadConfig["Load Config<br/>readYaml(file: configFile).ci"] --> Hello["Hello World<br/>echo Hello config.hello"] --> Hi["Hi — main branch only<br/>echo Hi config.firstName config.lastName"]
         end
         Loader --> Engine
     end
 
-    JenkinsfileDef["4. Jenkinsfile<br/>library 'my-shared-library'<br/>myDeliveryPipeline { appName = 'web-app'; env = 'production' }"]
+    JenkinsfileDef["4. Jenkinsfile<br/>library identifier: 'shared-library@main'<br/>pipelineTemplateHelloWorld('ci-config.yaml')"]
 
     JF -- "Loads Jenkinsfile" --> Engine
     JenkinsfileDef -- "Defines Pipeline" --> Engine
     Repo2 -- "Imports Shared Library" --> Loader
-    Repo2 -- "Loads Groovy Templates" --> Engine
+    Repo2 -- "Loads Groovy Template" --> Engine
+    Source -- "configFile path" --> LoadConfig
 ```
 
 ---
